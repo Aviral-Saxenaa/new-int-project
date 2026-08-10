@@ -1,11 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import pg from 'pg';
 import { env } from '../config/env.js';
+import { applySchema } from './schema.js';
 
 const { Client } = pg;
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const buildClient = ({ database } = {}) =>
   new Client(
@@ -50,19 +47,5 @@ async function ensureDatabase() {
   }
 }
 
-async function runSchema() {
-  const schemaPath = join(__dirname, 'schema.sql');
-  const schema = readFileSync(schemaPath, 'utf8');
-
-  const client = buildClient();
-  await client.connect();
-  try {
-    await client.query(schema);
-    console.log('[db] Schema applied');
-  } finally {
-    await client.end();
-  }
-}
-
 await ensureDatabase();
-await runSchema();
+await applySchema();

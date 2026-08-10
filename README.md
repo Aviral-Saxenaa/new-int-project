@@ -188,11 +188,10 @@ The server is deployed as a **single web service** that also serves the built Re
    - **Root directory:** `server`
    - **Build command:** `npm install`
    - **Start command:** `npm start`
-   - **Pre-deploy command:** `npm run db:init`
    - **Environment:** `DATABASE_URL=<your connection string>` and `CLIENT_URL=<your app url>`
 3. **Frontend (if not served by the server):** New → Static Site → root `client`, build `npm install && npm run build`, publish `dist`, env `VITE_API_URL=https://your-backend.onrender.com`.
 
-> The server serves `client/dist` when present, so Option A needs no frontend host at all. `DATABASE_URL` (with SSL) overrides the individual `PG*` vars; `npm run db:init` applies the schema automatically via `preDeployCommand`.
+> The server serves `client/dist` when present, so Option A needs no frontend host at all. `DATABASE_URL` (with SSL) overrides the individual `PG*` vars. The schema is **idempotent and applied automatically on every server start**, so no pre-deploy step is needed (free tier friendly).
 
 ### Environment variables on Render
 
