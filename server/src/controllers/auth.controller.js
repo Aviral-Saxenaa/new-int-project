@@ -1,7 +1,7 @@
 import { login, logout } from '../services/auth.service.js';
 
 export const loginUser = async (req, res) => {
-  const { token, user } = await login(req.body?.username);
+  const { token, user } = await login(req.body?.username, req.body?.password);
   res.json({ success: true, token, user });
 };
 
