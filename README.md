@@ -7,7 +7,7 @@ Messages are delivered instantly via WebSockets (Socket.io), are persisted in Po
 ## ✨ Features
 
 - **Real-time messaging** via Socket.io (no page refresh required)
-- **Username-based login** (dummy authentication, no password)
+- **Username + password login** — the account identity is the *(username, password)* pair
 - **Chat history** persisted in PostgreSQL, loaded on refresh
 - **Message timestamps** with smart formatting (Today / Yesterday / date)
 - **Typing indicator** — see who is typing, live
@@ -59,7 +59,7 @@ Messages are delivered instantly via WebSockets (Socket.io), are persisted in Po
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | `GET` | `/health` | Health check |
-| `POST` | `/api/auth/login` | Login / register a username → `{ token, user }` |
+| `POST` | `/api/auth/login` | Login / register with `{ username, password }` → `{ token, user }` |
 | `POST` | `/api/auth/logout` | Invalidate session token |
 | `GET` | `/api/messages` | Fetch chat history (auth required) |
 | `POST` | `/api/messages` | Send a message (auth required) |
@@ -123,14 +123,15 @@ npm run dev
 # App on http://localhost:5173
 ```
 
-Open **two browser windows** (or an incognito window) and log in with two different usernames to see real-time messaging, typing indicators and online status.
+Open **two browser windows** (or an incognito window) and log in with two different accounts — e.g. the same username with a different password, or two different usernames — to see real-time messaging, typing indicators and online status.
 
 > In development, Vite proxies `/api` and `/socket.io` to `localhost:5000`, so the frontend uses relative URLs with no extra config.
 
 ## 🗄️ Database Schema
 
 ```sql
-users    (id SERIAL PK, username VARCHAR(30) UNIQUE, created_at TIMESTAMPTZ)
+users    (id SERIAL PK, username VARCHAR(30), password TEXT, created_at TIMESTAMPTZ,
+          UNIQUE (username, password))
 messages (id SERIAL PK, user_id → users.id, username, content TEXT,
           status VARCHAR(20), created_at TIMESTAMPTZ)
 ```
@@ -149,7 +150,7 @@ messages (id SERIAL PK, user_id → users.id, username, content TEXT,
 ## 🧠 Design Decisions
 
 1. **One global chat room.** The app models a single "General" room; a room-scoped architecture (Socket.io rooms, per-room tables) can be layered on top later.
-2. **Dummy username auth.** `/api/auth/login` creates the user if needed and returns an opaque token held in an in-memory session store. Keeps setup frictionless while still protecting the REST API.
+2. **`(username, password)` pair auth.** The account identity is the pair itself: logging in with the same name **and** password returns the same user; the same name with a *different* password registers a separate account. Passwords are bcrypt-hashed, and `/api/auth/login` returns an opaque token held in an in-memory session store.
 3. **REST for history, Socket.io for realtime.** The REST API handles login and initial history fetch; all live events travel over a single Socket.io connection. This avoids polling entirely.
 4. **Optimistic sending with ack.** The sender sees their message immediately ("Sending…"), then swaps in the server-stored copy once the DB write completes. Failed sends are flagged in the UI.
 5. **Read receipts in a room.** A message flips to "read" when any *visible* connected client receives it. In a single-room app this is the pragmatic equivalent of "seen by someone".
@@ -159,7 +160,8 @@ messages (id SERIAL PK, user_id → users.id, username, content TEXT,
 
 ## 📝 Assumptions
 
-- Usernames are the only identity (no passwords/emails) and must be at least 3 characters.
+- Identity is the `(username, password)` pair (bcrypt-hashed). Username ≥ 3 chars, password ≥ 4 chars. Users may share a username as long as their passwords differ.
+- The same name is shown for accounts sharing a username; message ownership is tracked by `user_id`, so bubbles still align correctly.
 - PostgreSQL is reachable before the backend is used; `npm run db:init` handles database + schema setup.
 - Messages are capped at 2000 characters; history is returned newest-100, ordered oldest→newest for display.
 - In-memory sessions reset when the server restarts — users simply log in again.
