@@ -1,0 +1,38 @@
+databases:
+  - name: chatify-db
+    databaseName: chat_app
+    user: chatify
+
+services:
+  - type: web
+    name: chatify
+    runtime: node
+    plan: free
+    rootDir: .
+    healthCheckPath: /health
+    buildCommand: npm install && npm run install:all && npm run build:client
+    preDeployCommand: npm run db:init
+    startCommand: npm start
+    envVars:
+      - key: CLIENT_URL
+        sync: false
+      - key: PGHOST
+        fromDatabase:
+          name: chatify-db
+          property: host
+      - key: PGPORT
+        fromDatabase:
+          name: chatify-db
+          property: port
+      - key: PGUSER
+        fromDatabase:
+          name: chatify-db
+          property: user
+      - key: PGPASSWORD
+        fromDatabase:
+          name: chatify-db
+          property: password
+      - key: PGDATABASE
+        fromDatabase:
+          name: chatify-db
+          property: database

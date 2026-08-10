@@ -1,0 +1,17 @@
+{
+  "name": "chatify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time chat — React client + Express/Socket.io/PostgreSQL server",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "build:client": "npm --prefix client run build",
+    "db:init": "npm --prefix server run db:init",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "start": "npm --prefix server run start"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
