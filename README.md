@@ -4,6 +4,14 @@ A real-time chat application with a **React** frontend, **Node.js + Express + So
 
 Messages are delivered instantly via WebSockets (Socket.io), are persisted in PostgreSQL, and survive page refreshes.
 
+## 🚀 Live Demo
+
+**https://chatify-ll6z.onrender.com**
+
+Deployed on **Render** (free tier) as a single web service — the Node/Express/Socket.io API and the built React app are served from the same origin.
+
+> ⚠️ **Free-tier note:** after ~15 minutes of inactivity the service spins down, so the first page load can take 30–50 seconds. After that it's fast and real-time. Just open two tabs/browsers and log in with two different accounts to see it live.
+
 ## ✨ Features
 
 - **Real-time messaging** via Socket.io (no page refresh required)
@@ -168,30 +176,40 @@ messages (id SERIAL PK, user_id → users.id, username, content TEXT,
 
 ## ☁️ Deployment (Render)
 
-The repo includes a **Render Blueprint** (`render.yaml`) that provisions the app **and** a free PostgreSQL database in one click.
+The current live deployment runs on **Render free tier** as a **single web service** — the Node/Express/Socket.io API **and** the built React app are served from one origin (no CORS, no separate frontend host).
 
-The server is deployed as a **single web service** that also serves the built React app — no CORS, no separate static host, single URL.
+**Live:** https://chatify-ll6z.onrender.com
 
-### Option A — Render Blueprint (recommended)
+### Single-service manual deployment (how it's deployed now)
 
-1. Push this repo to GitHub.
-2. In [Render](https://dashboard.render.com) → **New → Blueprint**.
-3. Connect the GitHub repo and click **Apply**. Render reads `render.yaml` and creates:
-   - a free **PostgreSQL** database (`chatify-db`)
-   - a free **web service** (`chatify`) with the correct build/start commands wired up
-4. After it deploys, set `CLIENT_URL` in the service's **Environment** tab to your app URL (`https://chatify.onrender.com`) and click **Save** (auto-redeploys).
+1. **Database:** Render → **New → PostgreSQL** (free). Copy the **Internal Database URL**.
+2. **Web service:** Render → **New → Web Service** → connect the GitHub repo.
+   - **Root Directory:** ` ` (blank — repo root)
+   - **Build Command:** `npm install && npm run install:all && npm run build:client`
+   - **Start Command:** `npm start`
+   - **Instance Type:** Free
+3. **Environment variables:** `DATABASE_URL` = the Internal Database URL, and `CLIENT_URL` = your app URL (`https://<name>.onrender.com`).
+4. Deploy, then set `CLIENT_URL` to the actual URL if it changed.
 
-### Option B — Manual
+### Two-service alternative
 
-1. **Database:** Create a free PostgreSQL instance (Render or [Neon](https://neon.tech)). Copy the connection string → this is `DATABASE_URL`.
-2. **Web service:** New → Web Service → connect repo → pick `chatify-server` branch if applicable:
-   - **Root directory:** `server`
-   - **Build command:** `npm install`
-   - **Start command:** `npm start`
-   - **Environment:** `DATABASE_URL=<your connection string>` and `CLIENT_URL=<your app url>`
-3. **Frontend (if not served by the server):** New → Static Site → root `client`, build `npm install && npm run build`, publish `dist`, env `VITE_API_URL=https://your-backend.onrender.com`.
+- **Web service:** root directory `server`, build `npm install`, start `npm start`, env `DATABASE_URL` + `CLIENT_URL`.
+- **Static site:** root directory `client`, build `npm install && npm run build`, publish `dist`, env `VITE_API_URL=https://your-server.onrender.com`.
 
-> The server serves `client/dist` when present, so Option A needs no frontend host at all. `DATABASE_URL` (with SSL) overrides the individual `PG*` vars. The schema is **idempotent and applied automatically on every server start**, so no pre-deploy step is needed (free tier friendly).
+### Render Blueprint (`render.yaml`)
+
+A Blueprint is also included (`render.yaml`) which provisions the Postgres database + web service together. Note: free-tier services cannot use a `preDeployCommand`, so the schema is applied automatically on server start instead.
+
+### Deployment checklist (verified on the live URL)
+
+- ✅ Health endpoint `/health`
+- ✅ App page loads
+- ✅ Username + password login
+- ✅ Send message + fetch history (PostgreSQL persistence)
+- ✅ Socket.io real-time broadcast between two clients
+- ✅ Read receipts
+
+> `DATABASE_URL` (with SSL) overrides the individual `PG*` vars. The schema is **idempotent and applied automatically on every server start**, so no pre-deploy step is needed (free tier friendly).
 
 ### Environment variables on Render
 
