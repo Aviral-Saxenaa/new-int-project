@@ -17,8 +17,8 @@ const readStoredSession = () => {
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(readStoredSession);
 
-  const signIn = async (username) => {
-    const data = await api.login(username);
+  const signIn = async (username, password) => {
+    const data = await api.login(username, password);
     const next = { token: data.token, user: data.user };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setSession(next);

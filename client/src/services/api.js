@@ -18,8 +18,11 @@ const request = async (path, { token, ...options } = {}) => {
   return data;
 };
 
-export const login = (username) =>
-  request('/auth/login', { method: 'POST', body: JSON.stringify({ username }) });
+export const login = (username, password) =>
+  request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
 
 export const logout = (token) =>
   request('/auth/logout', { method: 'POST', token });

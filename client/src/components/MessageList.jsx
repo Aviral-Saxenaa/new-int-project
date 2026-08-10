@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import TypingIndicator from './TypingIndicator';
 
-const MessageList = ({ messages, currentUser, typingUsers, loading }) => {
+const MessageList = ({ messages, me, typingUsers, loading }) => {
   const scrollRef = useRef(null);
   const stickToBottom = useRef(true);
 
@@ -44,7 +44,7 @@ const MessageList = ({ messages, currentUser, typingUsers, loading }) => {
         <MessageBubble
           key={message.id}
           message={message}
-          isOwn={message.username === currentUser}
+          isOwn={message.user_id === me.id}
         />
       ))}
       <TypingIndicator users={typingUsers} />

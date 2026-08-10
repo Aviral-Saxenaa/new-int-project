@@ -10,7 +10,7 @@ const randomId = () => (crypto?.randomUUID ? crypto.randomUUID() : `tmp-${Date.n
 
 const ChatWindow = () => {
   const { session, signOut } = useAuth();
-  const me = session.user.username;
+  const me = session.user;
 
   const [messages, setMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -40,7 +40,7 @@ const ChatWindow = () => {
   }, [session.token, showToast]);
 
   useEffect(() => {
-    const socket = createSocket(session.token, me);
+    const socket = createSocket(session.token, me.username);
     socketRef.current = socket;
     setConnection('connecting');
     setLoading(true);
@@ -97,7 +97,8 @@ const ChatWindow = () => {
       const optimistic = {
         id: tempId,
         tempId,
-        username: me,
+        user_id: me.id,
+        username: me.username,
         content,
         status: 'sending',
         created_at: new Date().toISOString(),
@@ -108,7 +109,6 @@ const ChatWindow = () => {
     },
     [me, showToast]
   );
-
   const emitTyping = useCallback(() => {
     const socket = socketRef.current;
     if (!socket || !socket.connected) return;
@@ -135,7 +135,7 @@ const ChatWindow = () => {
     <div className="chat-layout">
       <UsersPanel
         users={onlineUsers}
-        currentUser={me}
+        currentUser={me.username}
         connection={connection}
         onLogout={signOut}
       />
@@ -143,7 +143,7 @@ const ChatWindow = () => {
       <main className="chat-main">
         <header className="chat-header">
           <div className="chat-title">
-            <span className="avatar header-avatar">{me.charAt(0).toUpperCase()}</span>
+            <span className="avatar header-avatar">{me.username.charAt(0).toUpperCase()}</span>
             <div>
               <h2 className="chat-room">General Room</h2>
               <p className="chat-subtitle">
@@ -155,7 +155,7 @@ const ChatWindow = () => {
 
         <MessageList
           messages={messages}
-          currentUser={me}
+          me={me}
           typingUsers={typingUsers}
           loading={loading}
         />
