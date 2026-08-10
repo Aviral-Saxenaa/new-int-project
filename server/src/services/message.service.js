@@ -16,7 +16,7 @@ export const createMessage = async ({ userId, username, content }) => {
   const result = await pool.query(
     `INSERT INTO messages (user_id, username, content)
      VALUES ($1, $2, $3)
-     RETURNING id, username, content, status, created_at`,
+     RETURNING id, user_id, username, content, status, created_at`,
     [userId, username, trimmed]
   );
 
@@ -27,7 +27,7 @@ export const getMessages = async ({ limit = LIMIT }) => {
   const safeLimit = Math.min(Math.max(parseInt(limit, 10) || LIMIT, 1), 500);
 
   const result = await pool.query(
-    `SELECT id, username, content, status, created_at
+    `SELECT id, user_id, username, content, status, created_at
      FROM messages
      ORDER BY created_at DESC
      LIMIT $1`,
