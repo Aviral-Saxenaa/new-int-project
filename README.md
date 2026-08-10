@@ -166,14 +166,41 @@ messages (id SERIAL PK, user_id → users.id, username, content TEXT,
 - Messages are capped at 2000 characters; history is returned newest-100, ordered oldest→newest for display.
 - In-memory sessions reset when the server restarts — users simply log in again.
 
-## ☁️ Deployment (bonus)
+## ☁️ Deployment (Render)
 
-The backend is deployable as-is on **Render / Railway / Render**:
+The repo includes a **Render Blueprint** (`render.yaml`) that provisions the app **and** a free PostgreSQL database in one click.
 
-1. Create a PostgreSQL instance on the host and copy its connection values into the env vars.
-2. Set `CLIENT_URL` to your deployed frontend origin.
-3. Build command (client): `npm install && npm run build` — serve `client/dist` with any static host.
-4. Start command (server): `node src/index.js`.
+The server is deployed as a **single web service** that also serves the built React app — no CORS, no separate static host, single URL.
+
+### Option A — Render Blueprint (recommended)
+
+1. Push this repo to GitHub.
+2. In [Render](https://dashboard.render.com) → **New → Blueprint**.
+3. Connect the GitHub repo and click **Apply**. Render reads `render.yaml` and creates:
+   - a free **PostgreSQL** database (`chatify-db`)
+   - a free **web service** (`chatify`) with the correct build/start commands wired up
+4. After it deploys, set `CLIENT_URL` in the service's **Environment** tab to your app URL (`https://chatify.onrender.com`) and click **Save** (auto-redeploys).
+
+### Option B — Manual
+
+1. **Database:** Create a free PostgreSQL instance (Render or [Neon](https://neon.tech)). Copy the connection string → this is `DATABASE_URL`.
+2. **Web service:** New → Web Service → connect repo → pick `chatify-server` branch if applicable:
+   - **Root directory:** `server`
+   - **Build command:** `npm install`
+   - **Start command:** `npm start`
+   - **Pre-deploy command:** `npm run db:init`
+   - **Environment:** `DATABASE_URL=<your connection string>` and `CLIENT_URL=<your app url>`
+3. **Frontend (if not served by the server):** New → Static Site → root `client`, build `npm install && npm run build`, publish `dist`, env `VITE_API_URL=https://your-backend.onrender.com`.
+
+> The server serves `client/dist` when present, so Option A needs no frontend host at all. `DATABASE_URL` (with SSL) overrides the individual `PG*` vars; `npm run db:init` applies the schema automatically via `preDeployCommand`.
+
+### Environment variables on Render
+
+| Variable | Purpose |
+| --- | --- |
+| `CLIENT_URL` | CORS origin / allowed frontend URL |
+| `DATABASE_URL` | Managed PostgreSQL connection string (overrides `PG*`) |
+| `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Individual DB settings (used when `DATABASE_URL` is unset) |
 
 ---
 
